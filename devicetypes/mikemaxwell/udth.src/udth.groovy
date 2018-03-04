@@ -2,6 +2,7 @@
 	Universal virtual DTH
   	Copyright 2016 Mike Maxwell
 
+    1.0.8   2018-03-03  added switch events option - Jeremy Titus
 	1.0.7	2016-09-22	added smoke, water and sound thanks Scott
     					added not used option to each device tile
                         fixed bug in illuminance not working
@@ -34,6 +35,7 @@ metadata {
         //outputs
         capability "Contact Sensor"			//"open","closed"
         capability "Motion Sensor"			//"active", "inactive"
+        capability "Switch"                 //"on", "off"
         capability "Presence Sensor"		//"present", "not present"
         capability "Acceleration Sensor"	//"active", "inactive"
         capability "Illuminance Measurement"
@@ -161,6 +163,17 @@ metadata {
             ,options		: buildOptions(d,s1,s2)
             ,description	: soundOn ?: "Not Used, Tap to enable..."            
         )
+
+        d = "Switch"
+        s1 = "on"
+        s2 = "off"
+        input( 
+            name            : "switchOn"
+            ,title          : buildTitle(d,s1,s2)
+            ,type           : "enum"
+            ,options        : buildOptions(d,s1,s2)
+            ,description    : switchOn ?: "Not Used" 
+        )
     
         d = "Presence"
         s1 = "present"
@@ -241,6 +254,11 @@ metadata {
             state "not detected", label:'${name}', backgroundColor: "#ffffff", icon:"st.quirky.spotter.quirky-spotter-sound-off" 
             state "detected", label:'${name}', backgroundColor: "#53a7c0", icon:"st.quirky.spotter.quirky-spotter-sound-on" 
         }
+        standardTile("switchEvt", "device.switch", inactiveLabel: false, height:2, width:2, canChangeIcon: false) {
+            state "default", label: "switch event\nnot used"
+            state "off", label:'${name}', backgroundColor: "#ffffff", icon:"st.switches.switch.on" 
+            state "on", label:'${name}', backgroundColor: "#53a7c0", icon:"st.switches.switch.off" 
+        }
         standardTile("present", "device.presence", inactiveLabel: false, height:2, width:2, canChangeIcon: false) {
             state "default", label: "presence\nnot used"
             state "not present", label:'${name}', backgroundColor: "#ffffff", icon:"st.presence.tile.presence-default" 
@@ -262,7 +280,7 @@ metadata {
             state "bright", label:'${name}', backgroundColor: "#ecf23a", icon:"st.illuminance.illuminance.bright" 
         }
         main(["switch"])
-        details(["switch","contact","motion","smoke","water","sound","present","door","accel","lux"])
+        details(["switch","contact","motion","smoke","water","sound","switchEvt","present","door","accel","lux"])
  	}
 }
 
@@ -327,7 +345,11 @@ def syncDevices(cmd){
 		if (soundOn == cmd) sendEvent(name: "sound", value: "detected")			//"when on send 'detected'\nwhen off send 'not detected'"
         else sendEvent(name: "sound", value: "not detected")						//"when on send 'not detected'\nwhen off send 'detected'"
     } else sendEvent(name: "sound", value: null, displayed	: false) 
-	if (presenceOn in ["0","1"]){
+	if (switchOn in ["0","1"]){
+        if (switchOn == cmd) sendEvent(name: "switch", value: "on")     //"when on send 'on'\nwhen off send 'off'"
+        else sendEvent(name: "switch", value: "off")                    //"when on send 'off'\nwhen off send 'on'"
+    } else sendEvent(name: "switch", value: null, displayed : false)
+    if (presenceOn in ["0","1"]){
 		if (presenceOn == cmd) sendEvent(name: "presence", value: "present")		//"when on send 'present'\nwhen off send 'not present'"
         else sendEvent(name: "presence", value: "not present")					//"when on send 'not present'\nwhen off send 'present'"
     } else sendEvent(name: "presence", value: null, displayed	: false)
